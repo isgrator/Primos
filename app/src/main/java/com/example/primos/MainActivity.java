@@ -1,5 +1,7 @@
 package com.example.primos;
 
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -80,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements TaskListener{
     @Override public void onPreExecute() {
         resultField.setText("");
         primecheckbutton.setText("CANCELAR");
+        lockScreenOrientation();
     }
 
     @Override public void onProgressUpdate(double progreso) {
@@ -89,11 +92,28 @@ public class MainActivity extends AppCompatActivity implements TaskListener{
     @Override public void onPostExecute(boolean resultado) {
         resultField.setText(resultado + "");
         primecheckbutton.setText("¿ES PRIMO?");
+        unlockScreenOrientation();
     }
 
     @Override public void onCancelled() {
         resultField.setText("Proceso cancelado");
         primecheckbutton.setText("¿ES PRIMO?");
+        unlockScreenOrientation();
     }
     //*******************************************************************
+
+    //Mëtodos para bloquear la orientación de la pantalla cuando esté en ejecución el hilo secundario
+    private void lockScreenOrientation() {
+        int currentOrientation= getResources().getConfiguration().orientation;
+        if (currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        } else {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        }
+    }
+
+    private void unlockScreenOrientation() {
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+    }
+    //***********************************************************************************************
 }
