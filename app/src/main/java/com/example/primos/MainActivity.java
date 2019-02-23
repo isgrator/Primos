@@ -9,7 +9,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements TaskListener{
 
     private static final String TAG = MainActivity.class.getName();
     private EditText inputField, resultField;
@@ -51,12 +51,11 @@ public class MainActivity extends AppCompatActivity {
             /*if(mAsyncTask != null) {
                 Log.i("Thread", "Estado al principio de triggerPrimeCheck (DEL TOO): " + mAsyncTask.getStatus());
             }*/
-            mAsyncTask = new MyAsyncTask(); //Tras hacer nueva instancia, el estado es PENDING
+            mAsyncTask = new MyAsyncTask(this); //Tras hacer nueva instancia, el estado es PENDING
+            //NOTA: Con "this", referencia a la clase que implementa el interface de comunicación, que en nuestro caso será MainActivity
         }
 
-
             if (mAsyncTask != null && mAsyncTask.getStatus() != AsyncTask.Status.RUNNING) {
-
                 //if(!isRunning) {
                 //isRunning = true;
                 //Log.i("Thread", "Estado al principio de triggerPrimeCheck 1: " + mAsyncTask.getStatus());
@@ -75,65 +74,26 @@ public class MainActivity extends AppCompatActivity {
                 //Log.i("Thread", "Estado al final de triggerPrimeCheck 2: " + mAsyncTask.getStatus());
             }
     }
-
-    //Clase interna************
-    private class MyAsyncTask extends AsyncTask<Long, Double, Boolean> {
-        @Override protected Boolean doInBackground(Long... n) {
-            Log.v(TAG, "Thread " + Thread.currentThread().getId() +
-                    ": Comienza doInBackground()");
-            long numComprobar = n[0];
-            if (numComprobar < 2 || numComprobar % 2 == 0)
-                return false;
-            double limite = Math.sqrt(numComprobar) + 0.0001;
-            double progreso = 0;
-            for (long factor = 3; factor < limite && !isCancelled(); factor += 2) { //detendremos la comprobación lo antes posible una vez nos lo indique el usuario
-                if (numComprobar % factor == 0)
-                    return false;
-                if (factor > limite * progreso / 100) {
-                    publishProgress(progreso / 100);
-                    progreso += 5;
-                }
-            }
-            Log.v(TAG, "Thread " + Thread.currentThread().getId() +
-                    ": Finaliza doInBackground()");
-            //Log.i("Thread","Estado al final de doInBackground: "+mAsyncTask.getStatus());
-            return true;
-        }
-
-        @Override protected void onPreExecute() {
-            Log.v(TAG, "Thread " + Thread.currentThread().getId() +
-                    ": onPreExecute()");
-            resultField.setText("");
-            //primecheckbutton.setEnabled(false);
-            primecheckbutton.setText("CANCELAR");
-            //Log.i("Thread","Estado al final de onPreExecute: "+mAsyncTask.getStatus());
-        }
-
-        @Override protected void onProgressUpdate(Double... progress) {
-            Log.v(TAG, "Thread " + Thread.currentThread().getId() +
-                    ": onProgressUpdate()");
-            resultField.setText(String.format("%.1f%% completed",
-                    progress[0] * 100));
-        }
-
-        @Override protected void onPostExecute(Boolean isPrime) {
-            Log.v(TAG, "Thread " + Thread.currentThread().getId() +
-                    ": onPostExecute()");
-            resultField.setText(isPrime + "");
-            //primecheckbutton.setEnabled(true);
-            primecheckbutton.setText("¿ES PRIMO?");
-            //isRunning=false;
-            //Log.i("Thread","Estado al final de onPostExecute: "+mAsyncTask.getStatus());
-        }
-
-        @Override protected void onCancelled() {
-            Log.v(TAG, "Thread " + Thread.currentThread().getId() +
-                    ": onCancelled");
-            super.onCancelled();
-            resultField.setText("Proceso cancelado");
-            primecheckbutton.setText("¿ES PRIMO?");
-            //Log.i("Thread","Estado al final de onCancelled: "+mAsyncTask.getStatus());
-        }
-    }//FIN CLASE INTERNA ***********
     //*********************************************************************
+
+    //Implementación de los métodos de TaskListener**********************
+    @Override public void onPreExecute() {
+        resultField.setText("");
+        primecheckbutton.setText("CANCELAR");
+    }
+
+    @Override public void onProgressUpdate(double progreso) {
+        resultField.setText(String.format("%.1f%% completado", progreso*100));
+    }
+
+    @Override public void onPostExecute(boolean resultado) {
+        resultField.setText(resultado + "");
+        primecheckbutton.setText("¿ES PRIMO?");
+    }
+
+    @Override public void onCancelled() {
+        resultField.setText("Proceso cancelado");
+        primecheckbutton.setText("¿ES PRIMO?");
+    }
+    //*******************************************************************
 }
